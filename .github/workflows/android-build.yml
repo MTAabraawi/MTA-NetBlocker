@@ -61,3 +61,11 @@ jobs:
         run: |
           "$RUNNER_TEMP/gradle-8.9/bin/gradle" --version
           "$RUNNER_TEMP/gradle-8.9/bin/gradle" testDebugUnitTest assembleDebug --stacktrace
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MTA-Net-blocker-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 7
