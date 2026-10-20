@@ -57,10 +57,36 @@ jobs:
           curl -fL --retry 3 https://services.gradle.org/distributions/gradle-8.9-bin.zip -o "$RUNNER_TEMP/gradle-8.9-bin.zip"
           unzip -q "$RUNNER_TEMP/gradle-8.9-bin.zip" -d "$RUNNER_TEMP"
 
-      - name: Build and test
+      - name: Decode release keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          RELEASE_KEYSTORE_PATH: ${{ runner.temp }}/mta-release.p12
         run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_BASE64"
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RELEASE_KEYSTORE_PATH"
+          test -s "$RELEASE_KEYSTORE_PATH"
+          chmod 600 "$RELEASE_KEYSTORE_PATH"
+          echo "Release keystore decoded successfully."
+
+      - name: Build and test
+        env:
+          RELEASE_KEYSTORE_PATH: ${{ runner.temp }}/mta-release.p12
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: mtaRelease
+        run: |
+          set -euo pipefail
           "$RUNNER_TEMP/gradle-8.9/bin/gradle" --version
-          "$RUNNER_TEMP/gradle-8.9/bin/gradle" testDebugUnitTest assembleDebug --stacktrace
+          "$RUNNER_TEMP/gradle-8.9/bin/gradle" testDebugUnitTest assembleDebug assembleRelease --stacktrace
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MTA-Net-blocker-release-apk
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
