@@ -52,8 +52,12 @@ jobs:
           grep -n 'CLASSPATH=' gradlew
           git status --short
 
+      - name: Download Gradle 8.9
+        run: |
+          curl -fL --retry 3 https://services.gradle.org/distributions/gradle-8.9-bin.zip -o "$RUNNER_TEMP/gradle-8.9-bin.zip"
+          unzip -q "$RUNNER_TEMP/gradle-8.9-bin.zip" -d "$RUNNER_TEMP"
+
       - name: Build and test
         run: |
-          chmod +x ./gradlew
-          ./gradlew --version --stacktrace
-          ./gradlew testDebugUnitTest assembleDebug --stacktrace
+          "$RUNNER_TEMP/gradle-8.9/bin/gradle" --version
+          "$RUNNER_TEMP/gradle-8.9/bin/gradle" testDebugUnitTest assembleDebug --stacktrace
