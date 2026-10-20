@@ -27,6 +27,7 @@ import com.mta.netblocker.ui.theme.MtaNetBlockerTheme
 import com.mta.netblocker.ui.theme.Slate900
 import com.mta.netblocker.vpn.VpnManager
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import java.util.UUID
 
 enum class AppDestination {
@@ -144,9 +145,40 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startVpnEngine() {
-        VpnManager.startVpn(this)
-        isVpnRunning = true
-        Toast.makeText(this, "تم تشغيل جدار الحماية بنجاح", Toast.LENGTH_SHORT).show()
+        lifecycleScope.launch {
+            try {
+                VpnManager.startVpn(this@MainActivity)
+
+                repeat(30) {
+                    if (VpnManager.isRunning()) {
+                        isVpnRunning = true
+                        Toast.makeText(
+                            this@MainActivity,
+                            "تم تشغيل جدار الحماية بنجاح",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@launch
+                    }
+                    delay(100)
+                }
+
+                isVpnRunning = VpnManager.isRunning()
+                if (!isVpnRunning) {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "تعذر تأكيد تشغيل جدار الحماية. تحقق من إذن VPN وحالة الخدمة.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            } catch (e: Exception) {
+                isVpnRunning = VpnManager.isRunning()
+                Toast.makeText(
+                    this@MainActivity,
+                    "حدث خطأ أثناء تشغيل جدار الحماية.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
     }
 
     @Composable

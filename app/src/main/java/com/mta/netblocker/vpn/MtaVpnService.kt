@@ -75,6 +75,11 @@ class MtaVpnService : VpnService(), Runnable {
             vpnInterface = configureVpnInterface()
             if (vpnInterface == null) {
                 Log.e(TAG, "Failed to establish VPN interface (null interface)")
+                isStopping.set(true)
+                isRunning.set(false)
+                prefsManager.isVpnActive = false
+                stopVpnInterface()
+                stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
                 return
             }
@@ -98,52 +103,58 @@ class MtaVpnService : VpnService(), Runnable {
      */
     private fun configureVpnInterface(): ParcelFileDescriptor? {
         val builder = Builder()
-
-        // Local Virtual Subnet for Sinkhole
         builder.setSession("MTA Net blocker Firewall")
         builder.setMtu(1500)
-        
-        // IPv4 Dummy Gateway
-        builder.addAddress("10.120.0.1", 32)
-        builder.addRoute("10.120.0.0", 24)
 
-        // IPv6 Dummy Gateway (Prevents IPv6 leak)
+        // Addresses for the local VPN TUN interface.
+        builder.addAddress("10.120.0.1", 32)
+
+        var ipv6Configured = false
         try {
             builder.addAddress("fd00:1:2:3::1", 128)
-            builder.addRoute("fd00:1:2:3::", 64)
+            ipv6Configured = true
         } catch (e: Exception) {
             Log.w(TAG, "IPv6 address assignment warning: ${e.message}")
         }
 
-        // Add dummy DNS to sinkhole any DNS requests originating from blocked apps
         builder.addDnsServer("10.120.0.1")
 
-        // Determine which packages should be captured and sinkholed
         val blockedPackages = getEffectiveBlockedPackages()
+        var addedCount = 0
 
-        if (blockedPackages.isEmpty()) {
-            // If no apps are currently blocked, capture a dummy package or loopback so service stays idle
+        for (pkg in blockedPackages) {
             try {
-                // Keep minimal configuration
-                builder.addRoute("10.120.0.0", 32)
+                builder.addAllowedApplication(pkg)
+                addedCount++
+            } catch (e: PackageManager.NameNotFoundException) {
+                Log.w(TAG, "Package not found on system: $pkg")
             } catch (e: Exception) {
-                Log.w(TAG, "Route fallback: ${e.message}")
+                Log.w(TAG, "Failed to add package $pkg to VPN: ${e.message}")
+            }
+        }
+
+        if (addedCount > 0) {
+            // Route all IPv4 traffic of allowed-to-VPN (blocked) apps into the sinkhole.
+            builder.addRoute("0.0.0.0", 0)
+
+            // Route IPv6 too when the IPv6 TUN address was configured successfully.
+            if (ipv6Configured) {
+                builder.addRoute("::", 0)
             }
         } else {
-            // Apply real package filter: only packages that are designated as blocked are routed into the sinkhole TUN
-            var addedCount = 0
-            for (pkg in blockedPackages) {
-                try {
-                    builder.addAllowedApplication(pkg)
-                    addedCount++
-                } catch (e: PackageManager.NameNotFoundException) {
-                    Log.w(TAG, "Package not found on system: $pkg")
-                } catch (e: Exception) {
-                    Log.w(TAG, "Failed to add package $pkg to VPN: ${e.message}")
-                }
+            // Keep an idle VPN configuration without capturing other apps.
+            try {
+                builder.addAllowedApplication(packageName)
+                builder.addRoute("10.120.0.0", 24)
+            } catch (e: Exception) {
+                Log.w(TAG, "Idle VPN configuration warning: ${e.message}")
             }
-            Log.i(TAG, "Configured $addedCount packages into MTA firewall sinkhole.")
         }
+
+        Log.i(
+            TAG,
+            "Configured $addedCount blocked packages; IPv6 configured=$ipv6Configured"
+        )
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             builder.setMetered(false)
@@ -204,11 +215,56 @@ class MtaVpnService : VpnService(), Runnable {
 
     private fun restartVpn() {
         Log.d(TAG, "Reloading VPN rules...")
+
+        isStopping.set(true)
+        val oldThread = vpnThread
+        oldThread?.interrupt()
         stopVpnInterface()
-        vpnInterface = configureVpnInterface()
-        if (vpnInterface != null) {
+
+        if (oldThread != null && oldThread !== Thread.currentThread()) {
+            try {
+                oldThread.join(2000)
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                Log.w(TAG, "Interrupted while waiting for old VPN thread", e)
+                stopVpn()
+                return
+            }
+
+            if (oldThread.isAlive) {
+                Log.e(TAG, "Old VPN packet thread did not stop; refusing to start a second thread")
+                isRunning.set(false)
+                prefsManager.isVpnActive = false
+                vpnThread = null
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf()
+                return
+            }
+        }
+
+        vpnThread = null
+
+        try {
+            val newInterface = configureVpnInterface()
+            if (newInterface == null) {
+                Log.e(TAG, "Failed to recreate VPN interface")
+                isRunning.set(false)
+                prefsManager.isVpnActive = false
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf()
+                return
+            }
+
+            vpnInterface = newInterface
+            isStopping.set(false)
+            isRunning.set(true)
+            prefsManager.isVpnActive = true
             vpnThread = Thread(this, "MtaVpnPacketThread").apply { start() }
+
             Log.i(TAG, "MTA VPN rules updated successfully.")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to reload VPN rules", e)
+            stopVpn()
         }
     }
 
