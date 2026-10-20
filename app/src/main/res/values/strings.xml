@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">MTA Net blocker</string>
+    <string name="vpn_service_description">جدار ناري محلي لحظر اتصال التطبيقات المختارة بالإنترنت لحماية خصوصيتك وبياناتك.</string>
+    <string name="notification_channel_name">خدمة جدار الحماية MTA</string>
+    <string name="notification_channel_desc">إشعارات تشغيل وإيقاف خدمة جدار الحماية</string>
+    <string name="notification_running_title">جدار حماية MTA Net blocker يعمل</string>
+    <string name="notification_running_content">يتم مراقبة وحظر حركة التطبيقات المحددة</string>
+    <string name="stop_service">إيقاف الخدمة</string>
+
+    <!-- UI Strings -->
+    <string name="block_all">حظر الكل</string>
+    <string name="unblock_all">إلغاء حظر الكل</string>
+    <string name="nav_main">التطبيقات</string>
+    <string name="nav_blocked">المحظورة</string>
+    <string name="nav_excluded">المستثناة</string>
+    <string name="search_hint">ابحث عن تطبيق أو حزمة...</string>
+    <string name="status_protected">الحماية نشطة</string>
+    <string name="status_disabled">الحماية متوقفة</string>
+    <string name="loading_apps">جاري فحص التطبيقات المثبتة...</string>
+    <string name="no_apps_found">لم يتم العثور على أي تطبيق</string>
+    <string name="no_blocked_apps">لا توجد تطبيقات محظورة حالياً</string>
+    <string name="no_excluded_apps">لا توجد تطبيقات مستثناة</string>
+    <string name="excluded_apps_desc">التطبيقات المستثناة تتصل بالإنترنت دائماً حتى عند تفعيل خيار «حظر الكل»</string>
+    <string name="ad_skip">تخطي</string>
+    <string name="ad_time_remaining">ينتهي الإعلان بعد %d ثانية</string>
+</resources>

@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#4F46E5"
+        android:pathData="M54,12L18,28V52C18,74.5 33.4,95.2 54,100C74.6,95.2 90,74.5 90,52V28L54,12Z" />
+    <path
+        android:fillColor="#06B6D4"
+        android:pathData="M54,20L24,33.3V52C24,70.8 36.8,88.1 54,92.1C71.2,88.1 84,70.8 84,52V33.3L54,20Z" />
+    <!-- Network Block Symbol: Cross & Signal inside shield -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M42,44H66V48H42z M42,54H66V58H42z M42,64H58V68H42z" />
+    <path
+        android:fillColor="#EF4444"
+        android:pathData="M66,62L74,70M74,62L66,70"
+        android:strokeWidth="3"
+        android:strokeColor="#EF4444"
+        android:strokeLineCap="round"/>
+</vector>
