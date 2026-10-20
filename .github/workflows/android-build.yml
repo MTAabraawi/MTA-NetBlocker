@@ -31,7 +31,19 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Verify Gradle Wrapper
+        run: |
+          ls -l gradlew gradle/wrapper/gradle-wrapper.jar
+          test -s gradle/wrapper/gradle-wrapper.jar
+          python3 - <<'PYTHON'
+          import zipfile
+          with zipfile.ZipFile('gradle/wrapper/gradle-wrapper.jar') as z:
+              assert 'org/gradle/wrapper/GradleWrapperMain.class' in z.namelist()
+          print('Gradle Wrapper JAR is valid.')
+          PYTHON
+
       - name: Build and test
         run: |
           chmod +x ./gradlew
-          ./gradlew testDebugUnitTest assembleDebug
+          ./gradlew --version
+          ./gradlew testDebugUnitTest assembleDebug --stacktrace
