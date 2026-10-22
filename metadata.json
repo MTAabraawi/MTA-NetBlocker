@@ -1,0 +1,6 @@
+{
+  "name": "MTA Net blocker",
+  "description": "Enterprise-grade Android local VPN firewall, real-time speed monitor, remote configuration REST API, and administration dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

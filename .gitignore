@@ -5,3 +5,17 @@ local.properties
 *.keystore
 .idea/
 .DS_Store
+
+# Sensitive environment files
+.env
+.env.*
+!.env.example
+
+# Local runtime data and generated files
+data/
+dist/
+node_modules/
+
+# Local backups
+*.bak
+*.before-*
