@@ -14,7 +14,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.mta.netblocker"
+        applicationId = "com.mtaapps.testverify"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
