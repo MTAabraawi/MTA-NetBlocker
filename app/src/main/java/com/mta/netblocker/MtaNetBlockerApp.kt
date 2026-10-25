@@ -4,6 +4,7 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
+import com.google.android.gms.ads.MobileAds
 
 class MtaNetBlockerApp : Application() {
 
@@ -17,6 +18,7 @@ class MtaNetBlockerApp : Application() {
         super.onCreate()
         instance = this
         createNotificationChannel()
+        MobileAds.initialize(this) {}
     }
 
     private fun createNotificationChannel() {

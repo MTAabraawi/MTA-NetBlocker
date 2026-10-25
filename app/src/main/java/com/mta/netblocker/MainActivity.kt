@@ -7,7 +7,9 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
@@ -15,19 +17,23 @@ import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
 import com.mta.netblocker.data.AppRepository
 import com.mta.netblocker.network.ApiService
-import com.mta.netblocker.network.models.AdItem
 import com.mta.netblocker.ui.screens.*
 import com.mta.netblocker.ui.theme.MtaNetBlockerTheme
 import com.mta.netblocker.ui.theme.Slate900
 import com.mta.netblocker.vpn.VpnManager
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
 import java.util.UUID
 
 enum class AppDestination {
@@ -43,8 +49,6 @@ class MainActivity : ComponentActivity() {
     
     // State machine for startup navigation
     private var isSplashActive by mutableStateOf(true)
-    private var startupAd by mutableStateOf<AdItem?>(null)
-    private var isAdShowing by mutableStateOf(false)
     private var currentDestination by mutableStateOf(AppDestination.MAIN)
     private var isVpnRunning by mutableStateOf(false)
 
@@ -68,18 +72,6 @@ class MainActivity : ComponentActivity() {
             appRepository.loadInstalledApps()
         }
 
-        // Check for startup ad in the background while 3s splash screen is running
-        lifecycleScope.launch {
-            try {
-                val adResponse = apiService.fetchStartupAd()
-                if (adResponse.hasAd && adResponse.ad != null && adResponse.ad.isActive) {
-                    startupAd = adResponse.ad
-                }
-            } catch (e: Exception) {
-                startupAd = null
-            }
-        }
-
         // Register active user ping
         lifecycleScope.launch {
             val deviceId = getSharedPreferences("device", MODE_PRIVATE)
@@ -99,18 +91,6 @@ class MainActivity : ComponentActivity() {
                             SplashScreen(
                                 onSplashFinished = {
                                     isSplashActive = false
-                                    if (startupAd != null) {
-                                        isAdShowing = true
-                                    }
-                                }
-                            )
-                        }
-
-                        isAdShowing && startupAd != null -> {
-                            StartupAdScreen(
-                                ad = startupAd!!,
-                                onAdDismissed = {
-                                    isAdShowing = false
                                 }
                             )
                         }
@@ -182,14 +162,31 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
+    private fun AdMobBanner() {
+        val context = LocalContext.current
+        AndroidView(
+            modifier = Modifier.fillMaxWidth(),
+            factory = { ctx ->
+                AdView(ctx).apply {
+                    setAdSize(AdSize.BANNER)
+                    adUnitId = "ca-app-pub-8004171697196640/1710744822"
+                    loadAd(AdRequest.Builder().build())
+                }
+            }
+        )
+    }
+
+    @Composable
     private fun MainScaffoldView() {
         val apps by appRepository.installedApps.collectAsState()
 
         Scaffold(
             bottomBar = {
-                NavigationBar(
-                    containerColor = Slate900
-                ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    AdMobBanner()
+                    NavigationBar(
+                        containerColor = Slate900
+                    ) {
                     NavigationBarItem(
                         selected = currentDestination == AppDestination.MAIN,
                         onClick = { currentDestination = AppDestination.MAIN },
@@ -208,6 +205,7 @@ class MainActivity : ComponentActivity() {
                         icon = { Icon(Icons.Default.Star, contentDescription = null) },
                         label = { Text("المستثناة") }
                     )
+                    }
                 }
             }
         ) { paddingValues ->
