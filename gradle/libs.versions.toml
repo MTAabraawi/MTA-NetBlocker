@@ -15,8 +15,10 @@ gson = "2.11.0"
 coil = "2.7.0"
 playServicesAds = "24.6.0"
 googleServices = "4.4.4"
+firebaseAnalytics = "22.2.0"
 
 [libraries]
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics", version.ref = "firebaseAnalytics" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

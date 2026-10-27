@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.firebase.analytics)
     implementation(libs.androidx.fragment.ktx)
     
     // Jetpack Compose BOM & Material 3
