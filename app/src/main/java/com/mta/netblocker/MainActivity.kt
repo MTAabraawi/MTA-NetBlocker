@@ -33,6 +33,7 @@ import com.mta.netblocker.ui.screens.*
 import com.mta.netblocker.ui.theme.MtaNetBlockerTheme
 import com.mta.netblocker.ui.theme.Slate900
 import com.mta.netblocker.vpn.VpnManager
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
 
