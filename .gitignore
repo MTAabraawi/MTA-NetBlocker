@@ -19,3 +19,6 @@ node_modules/
 # Local backups
 *.bak
 *.before-*
+
+# Firebase configuration (keep local)
+app/google-services.json
