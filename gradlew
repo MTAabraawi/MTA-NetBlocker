@@ -56,6 +56,7 @@ case "`uname`" in
     ;;
 esac
 
+APP_HOME="$(cd -P "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
 CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
 
 # Determine the Java command to use to start the JVM.
